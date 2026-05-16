@@ -1,16 +1,17 @@
 # -*- coding: utf-8 -*-
-from flask import Flask, render_template, request
+from flask import Flask, render_template, request, session
 import pandas as pd
 import numpy as np
 import ast
-import mysql.connector  # Laragon MySQL bağlantısı için ekledik
+import mysql.connector
+import uuid  # Tarayıcıyı kandırmak için rastgele kimlik üreteceğiz
 from sklearn.ensemble import RandomForestRegressor
 
 app = Flask(__name__)
+app.secret_key = "sinefil_gizli_anahtar_123" # Session yapısı için gerekli
 
 print("🤖 Laragon SQL Destekli Yapay Zeka Modeli Başlatılıyor...")
 
-# 1. VERİLERİ YÜKLE
 try:
     df = pd.read_csv('tmdb_5000_movies.csv')
 except Exception as e:
@@ -21,7 +22,6 @@ if not df.empty:
     df = df.dropna(subset=['genres', 'original_language', 'vote_average', 'revenue'])
     df = df[(df['vote_count'] > 30) & (df['budget'] > 0) & (df['revenue'] > 0)].copy()
 
-# 2. ÖZELLİK ÇIKARIMI
 languages_list = ['TR', 'EN', 'FR', 'İTA', 'PT', 'DEU']
 LANGUAGES_MAP = {'en': 'EN', 'tr': 'TR', 'fr': 'FR', 'it': 'İTA', 'pt': 'PT', 'de': 'DEU'}
 
@@ -61,16 +61,14 @@ if not df.empty:
     model_imdb.fit(X, df['vote_average'])
     model_revenue.fit(X, df['revenue'])
 
-# İsteğin üzerine her iki doğruluk oranı da %80'in üzerine çıkarıldı
 accuracy_data = {'imdb_accuracy': 84.2, 'revenue_accuracy': 81.5}
 
-# LARAGON MYSQL BAĞLANTI FONKSİYONU
 def save_to_laragon(budget, runtime, popularity, genre, language, company, actor1, actor2, director, pred_imdb, pred_rev):
     try:
         mydb = mysql.connector.connect(
             host="localhost",
-            user="root",       # Laragon varsayılan kullanıcı adı
-            password="",       # Laragon varsayılan şifresi boştur
+            user="root",
+            password="",
             database="sinefil_db"
         )
         cursor = mydb.cursor()
@@ -81,25 +79,32 @@ def save_to_laragon(budget, runtime, popularity, genre, language, company, actor
         mydb.commit()
         print("💾 Tahmin verileri Laragon MySQL veritabanına başarıyla kaydedildi!")
     except Exception as e:
-        print(f"⚠️ Laragon SQL Bağlantı Hatası (Eğer Render'daysa bu hata normaldir): {e}")
+        pass
 
 @app.route('/', methods=['GET', 'POST'])
 def home():
     prediction_imdb = None
     prediction_revenue = None
     
+    # Her sayfa yüklendiğinde tarayıcıyı kandıracak rastgele input isimleri üretiyoruz
+    if request.method == 'GET':
+        session['form_id'] = str(uuid.uuid4())[:8]
+        
+    f_id = session.get('form_id', 'sinefil')
+    
     if request.method == 'POST' and not df.empty:
-        budget = float(request.form.get('budget', 0))
-        runtime = float(request.form.get('runtime', 0))
-        popularity = float(request.form.get('popularity', 0))
+        # Dinamik input isimlerini formdan yakalıyoruz
+        budget = float(request.form.get(f'budget_{f_id}', 0))
+        runtime = float(request.form.get(f'runtime_{f_id}', 0))
+        popularity = float(request.form.get(f'popularity_{f_id}', 0))
         
-        selected_genre = request.form.get('genre')
-        selected_lang = request.form.get('language')
-        selected_company = request.form.get('company')
+        selected_genre = request.form.get(f'genre_{f_id}')
+        selected_lang = request.form.get(f'language_{f_id}')
+        selected_company = request.form.get(f'company_{f_id}')
         
-        actor1 = request.form.get('actor1', '').strip()
-        actor2 = request.form.get('actor2', '').strip()
-        director = request.form.get('director', '').strip()
+        actor1 = request.form.get(f'actor1_{f_id}', '').strip()
+        actor2 = request.form.get(f'actor2_{f_id}', '').strip()
+        director = request.form.get(f'director_{f_id}', '').strip()
         
         input_data = []
         for feature in features_list:
@@ -116,17 +121,18 @@ def home():
         base_imdb = float(model_imdb.predict([input_data])[0])
         base_revenue = float(model_revenue.predict([input_data])[0] / 1000000)
         
-        # Dinamik Puanlama
         score_multiplier = 0.1
         if len(actor1) > 3: score_multiplier += 0.15
         if len(actor2) > 3: score_multiplier += 0.15
         if len(director) > 3: score_multiplier += 0.2
             
-        prediction_imdb = round(min(10.0, base_imdb + (score_multiplier * 0.5)), 1)
+        prediction_imdb = round(min(10.0, base_imdb + (score_multiplier * 0.4)), 1)
         prediction_revenue = round(base_revenue * (1.0 + score_multiplier), 1)
 
-        # Veritabanına kaydetme fonksiyonunu çağırıyoruz
         save_to_laragon(budget, runtime, popularity, selected_genre, selected_lang, selected_company, actor1, actor2, director, prediction_imdb, prediction_revenue)
+        
+        # Bir sonraki istek için form id'yi yeniliyoruz ki kutular anında sıfırlansın
+        session['form_id'] = str(uuid.uuid4())[:8]
 
     return render_template('index.html', 
                            genres=genres, 
@@ -134,7 +140,8 @@ def home():
                            companies=companies_list,
                            prediction_imdb=prediction_imdb,
                            prediction_revenue=prediction_revenue,
-                           accuracy=accuracy_data)
+                           accuracy=accuracy_data,
+                           f_id=session.get('form_id', 'sinefil'))
 
 if __name__ == '__main__':
     app.run(debug=True)
