@@ -10,6 +10,8 @@
         .card { background-color: #1e1e1e; border: none; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.5); }
         .btn-primary { background-color: #e50914; border: none; }
         .btn-primary:hover { background-color: #b20710; }
+        /* Yazıların net okunması için tamamen beyaz yapıyoruz */
+        .form-label { color: #ffffff !important; font-weight: 600; font-size: 1.1rem; display: block; margin-bottom: 8px; }
         .accent-box { background: linear-gradient(45deg, #1f4068, #162447); border-radius: 10px; padding: 15px; text-align: center; margin-top: 20px; }
         .accuracy-text { color: #00fff0; font-weight: bold; }
     </style>
@@ -59,12 +61,27 @@
                         </div>
 
                         <div class="mb-3">
-                            <label class="form-label">Yapım Şirketi</label>
+                            <label class="form-label">Yapım Şiriketi</label>
                             <select name="company" class="form-select bg-dark text-white border-secondary">
                                 {% for c in companies %}
                                 <option value="{{ c }}">{{ c }}</option>
                                 {% endfor %}
                             </select>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">1. Başrol Oyuncusu</label>
+                            <input type="text" name="actor1" class="form-control bg-dark text-white border-secondary" placeholder="İstediğiniz oyuncunun adını yazın" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">2. Başrol Oyuncusu</label>
+                            <input type="text" name="actor2" class="form-control bg-dark text-white border-secondary" placeholder="İkinci oyuncunun adını yazın" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Yönetmen</label>
+                            <input type="text" name="director" class="form-control bg-dark text-white border-secondary" placeholder="Yönetmenin adını yazın" required>
                         </div>
 
                         <button type="submit" class="btn btn-primary w-100 fw-bold py-2">TAHMİN ET 🚀</button>
