@@ -10,6 +10,8 @@
         .card { background-color: #1e1e1e; border: none; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.5); }
         .btn-primary { background-color: #e50914; border: none; }
         .btn-primary:hover { background-color: #b20710; }
+        .btn-secondary { background-color: #333333; border: none; }
+        .btn-secondary:hover { background-color: #555555; }
         .form-label { color: #ffffff !important; font-weight: 600; font-size: 1.1rem; display: block; margin-bottom: 8px; }
         .accent-box { background: linear-gradient(45deg, #1f4068, #162447); border-radius: 10px; padding: 15px; text-align: center; margin-top: 20px; }
         .accuracy-text { color: #00fff0; font-weight: bold; }
@@ -25,20 +27,20 @@
                 </div>
 
                 <div class="card p-4 mb-4">
-                    <form method="POST">
+                    <form method="POST" autocomplete="chrome-off">
                         <div class="mb-3">
                             <label class="form-label">Film Bütçesi ($)</label>
-                            <input type="number" name="budget" class="form-control bg-dark text-white border-secondary" placeholder="Örn: 50000000" required>
+                            <input type="number" name="budget" class="form-control bg-dark text-white border-secondary" placeholder="Örn: 50000000" autocomplete="new-password" required>
                         </div>
                         
                         <div class="mb-3">
                             <label class="form-label">Film Süresi (Dakika)</label>
-                            <input type="number" name="runtime" class="form-control bg-dark text-white border-secondary" placeholder="Örn: 120" required>
+                            <input type="number" name="runtime" class="form-control bg-dark text-white border-secondary" placeholder="Örn: 120" autocomplete="new-password" required>
                         </div>
 
                         <div class="mb-3">
                             <label class="form-label">Popülerlik Skoru</label>
-                            <input type="number" step="0.1" name="popularity" class="form-control bg-dark text-white border-secondary" placeholder="Örn: 35.5" required>
+                            <input type="number" step="0.1" name="popularity" class="form-control bg-dark text-white border-secondary" placeholder="Örn: 35.5" autocomplete="new-password" required>
                         </div>
 
                         <div class="mb-3">
@@ -70,20 +72,23 @@
 
                         <div class="mb-3">
                             <label class="form-label">1. Başrol Oyuncusu</label>
-                            <input type="text" name="actor1" class="form-control bg-dark text-white border-secondary" placeholder="İstediğiniz oyuncunun adını yazın" required>
+                            <input type="text" name="actor1" class="form-control bg-dark text-white border-secondary" placeholder="İstediğiniz oyuncunun adını yazın" autocomplete="new-password" required>
                         </div>
 
                         <div class="mb-3">
                             <label class="form-label">2. Başrol Oyuncusu</label>
-                            <input type="text" name="actor2" class="form-control bg-dark text-white border-secondary" placeholder="İkinci oyuncunun adını yazın" required>
+                            <input type="text" name="actor2" class="form-control bg-dark text-white border-secondary" placeholder="İkinci oyuncunun adını yazın" autocomplete="new-password" required>
                         </div>
 
                         <div class="mb-3">
                             <label class="form-label">Yönetmen</label>
-                            <input type="text" name="director" class="form-control bg-dark text-white border-secondary" placeholder="Yönetmenin adını yazın" required>
+                            <input type="text" name="director" class="form-control bg-dark text-white border-secondary" placeholder="Yönetmenin adını yazın" autocomplete="new-password" required>
                         </div>
 
-                        <button type="submit" class="btn btn-primary w-100 fw-bold py-2">TAHMİN ET 🚀</button>
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-primary flex-grow-1 fw-bold py-2">TAHMİN ET 🚀</button>
+                            <button type="reset" class="btn btn-secondary fw-bold py-2 px-4">TEMİZLE 🧹</button>
+                        </div>
                     </form>
                 </div>
 
@@ -101,6 +106,7 @@
                             <p class="display-6 fw-bold text-info">${{ prediction_revenue }}M</p>
                         </div>
                     </div>
+                    <a href="/" class="btn btn-outline-light btn-sm mt-3 mx-auto" style="max-width: 200px;">Yeni Tahmin Yap 🔁</a>
                 </div>
                 {% endif %}
 
