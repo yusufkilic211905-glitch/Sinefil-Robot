@@ -27,25 +27,25 @@
                 </div>
 
                 <div class="card p-4 mb-4">
-                    <form method="POST" autocomplete="chrome-off">
+                    <form method="POST" autocomplete="off" action="/">
                         <div class="mb-3">
                             <label class="form-label">Film Bütçesi ($)</label>
-                            <input type="number" name="budget" class="form-control bg-dark text-white border-secondary" placeholder="Örn: 50000000" autocomplete="new-password" required>
+                            <input type="number" name="budget_{{ f_id }}" class="form-control bg-dark text-white border-secondary" placeholder="Örn: 50000000" autocomplete="off" required>
                         </div>
                         
                         <div class="mb-3">
                             <label class="form-label">Film Süresi (Dakika)</label>
-                            <input type="number" name="runtime" class="form-control bg-dark text-white border-secondary" placeholder="Örn: 120" autocomplete="new-password" required>
+                            <input type="number" name="runtime_{{ f_id }}" class="form-control bg-dark text-white border-secondary" placeholder="Örn: 120" autocomplete="off" required>
                         </div>
 
                         <div class="mb-3">
                             <label class="form-label">Popülerlik Skoru</label>
-                            <input type="number" step="0.1" name="popularity" class="form-control bg-dark text-white border-secondary" placeholder="Örn: 35.5" autocomplete="new-password" required>
+                            <input type="number" step="0.1" name="popularity_{{ f_id }}" class="form-control bg-dark text-white border-secondary" placeholder="Örn: 35.5" autocomplete="off" required>
                         </div>
 
                         <div class="mb-3">
                             <label class="form-label">Film Türü</label>
-                            <select name="genre" class="form-select bg-dark text-white border-secondary">
+                            <select name="genre_{{ f_id }}" class="form-select bg-dark text-white border-secondary">
                                 {% for g in genres %}
                                 <option value="{{ g }}">{{ g }}</option>
                                 {% endfor %}
@@ -54,7 +54,7 @@
 
                         <div class="mb-3">
                             <label class="form-label">Orijinal Dil</label>
-                            <select name="language" class="form-select bg-dark text-white border-secondary">
+                            <select name="language_{{ f_id }}" class="form-select bg-dark text-white border-secondary">
                                 {% for l in languages %}
                                 <option value="{{ l }}">{{ l }}</option>
                                 {% endfor %}
@@ -63,7 +63,7 @@
 
                         <div class="mb-3">
                             <label class="form-label">Yapım Şirketi</label>
-                            <select name="company" class="form-select bg-dark text-white border-secondary">
+                            <select name="company_{{ f_id }}" class="form-select bg-dark text-white border-secondary">
                                 {% for c in companies %}
                                 <option value="{{ c }}">{{ c }}</option>
                                 {% endfor %}
@@ -72,17 +72,17 @@
 
                         <div class="mb-3">
                             <label class="form-label">1. Başrol Oyuncusu</label>
-                            <input type="text" name="actor1" class="form-control bg-dark text-white border-secondary" placeholder="İstediğiniz oyuncunun adını yazın" autocomplete="new-password" required>
+                            <input type="text" name="actor1_{{ f_id }}" class="form-control bg-dark text-white border-secondary" placeholder="İstediğiniz oyuncunun adını yazın" autocomplete="off" required>
                         </div>
 
                         <div class="mb-3">
                             <label class="form-label">2. Başrol Oyuncusu</label>
-                            <input type="text" name="actor2" class="form-control bg-dark text-white border-secondary" placeholder="İkinci oyuncunun adını yazın" autocomplete="new-password" required>
+                            <input type="text" name="actor2_{{ f_id }}" class="form-control bg-dark text-white border-secondary" placeholder="İkinci oyuncunun adını yazın" autocomplete="off" required>
                         </div>
 
                         <div class="mb-3">
                             <label class="form-label">Yönetmen</label>
-                            <input type="text" name="director" class="form-control bg-dark text-white border-secondary" placeholder="Yönetmenin adını yazın" autocomplete="new-password" required>
+                            <input type="text" name="director_{{ f_id }}" class="form-control bg-dark text-white border-secondary" placeholder="Yönetmenin adını yazın" autocomplete="off" required>
                         </div>
 
                         <div class="d-flex gap-2">
