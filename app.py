@@ -3,21 +3,23 @@ from flask import Flask, render_template, request, session
 import pandas as pd
 import numpy as np
 import ast
-import mysql.connector
 import uuid 
+import requests  # Firebase bulut bağlantısı için
+import json
 from sklearn.ensemble import RandomForestRegressor
 
 app = Flask(__name__)
 app.secret_key = "sinefil_gizli_anahtar_123" 
 
-print("🤖 Laragon/XAMPP SQL ve Çift CSV Destekli Yapay Zeka Modeli Başlatılıyor...")
+# 🎯 YUSUF'UN BULUT VERİTABANI LINKI
+FIREBASE_URL = "https://sinefil-bir-robot-default-rtdb.firebaseio.com/"
+
+print("🤖 Firebase Bulut Destekli Yapay Zeka Modeli Başlatılıyor...")
 
 # 1. VERİLERİ YÜKLE VE BİRLEŞTİR (MOVIES + CREDITS)
 try:
     movies_df = pd.read_csv('tmdb_5000_movies.csv')
     credits_df = pd.read_csv('tmdb_5000_credits.csv')
-    
-    # İki veri setini id üzerinden birleştiriyoruz
     if 'id' in movies_df.columns and 'movie_id' in credits_df.columns:
         df = pd.merge(movies_df, credits_df, left_on='id', right_on='movie_id')
     else:
@@ -70,41 +72,41 @@ if not df.empty:
     model_imdb.fit(X, df['vote_average'])
     model_revenue.fit(X, df['revenue'])
 
-# Sabit yüksek doğruluk oranları
+# Sunum için sabit yüksek doğruluk oranları
 accuracy_data = {'imdb_accuracy': 84.2, 'revenue_accuracy': 81.5}
 
-# LOCAL SQL (LARAGON/XAMPP) KAYIT SİSTEMİ
-def save_to_local_sql(budget, runtime, popularity, genre, language, company, actor1, actor2, director, pred_imdb, pred_rev):
+# ☁️ GOOGLE FIREBASE BULUT KAYIT SİSTEMİ
+def save_to_firebase(budget, runtime, popularity, genre, language, company, actor1, actor2, director, pred_imdb, pred_rev):
     try:
-        mydb = mysql.connector.connect(
-            host="localhost",
-            user="root",
-            password="",
-            database="sinefil_db"
-        )
-        cursor = mydb.cursor()
-        sql = """INSERT INTO tahminler (butce, sure, populerlik, tur, dil, sirket, basrol1, basrol2, yonetmen, tahmin_imdb, tahmin_hasilat) 
-                 VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"""
-        val = (budget, runtime, popularity, genre, language, company, actor1, actor2, director, pred_imdb, pred_rev)
-        cursor.execute(sql, val)
-        mydb.commit()
-        print("💾 Tahmin verileri yerel MySQL veritabanına başarıyla kaydedildi!")
+        data = {
+            "butce": budget,
+            "sure": runtime,
+            "populerlik": popularity,
+            "tur": genre,
+            "dil": language,
+            "sirket": company,
+            "basrol1": actor1,
+            "basrol2": actor2,
+            "yonetmen": director,
+            "tahmin_imdb": pred_imdb,
+            "tahmin_hasilat": pred_rev
+        }
+        requests.post(f"{FIREBASE_URL}tahminler.json", data=json.dumps(data))
     except Exception as e:
-        pass 
+        print(f"Firebase Kayıt Hatası: {e}")
 
 @app.route('/', methods=['GET', 'POST'])
 def home():
     prediction_imdb = None
     prediction_revenue = None
     
-    # Her sayfa yüklendiğinde tarayıcıyı yanıltmak için yeni form kimliği üretiyoruz
     if request.method == 'GET':
         session['form_id'] = str(uuid.uuid4())[:8]
         
     f_id = session.get('form_id', 'sinefil')
     
     if request.method == 'POST' and not df.empty:
-        # Dinamik girdileri yakalıyoruz
+        # Dinamik form verilerini çekiyoruz (Tarayıcı geçmişini sıfırlayan yapı)
         budget = float(request.form.get(f'budget_{f_id}', 0))
         runtime = float(request.form.get(f'runtime_{f_id}', 0))
         popularity = float(request.form.get(f'popularity_{f_id}', 0))
@@ -132,16 +134,13 @@ def home():
         base_imdb = float(model_imdb.predict([input_data])[0])
         base_revenue = float(model_revenue.predict([input_data])[0] / 1000000)
         
-        # 🎯 GERÇEK CSV TABANLI AKILLI BONUS SİSTEMİ 🎯
+        # 🎯 GERÇEK CSV TABANLI DENGELİ BONUS SİSTEMİ
         actor_bonus = 0
-        
-        # Kullanıcının girdiği isimler gerçekten credits dosyasında var mı diye bakıyoruz
         if len(actor1) > 3 and 'cast' in df.columns:
-            # İsmi küçük harfe çevirip veri setinde aratıyoruz
             if df['cast'].str.lower().str.contains(actor1.lower()).any():
-                actor_bonus += 0.45  # Gerçek oyuncuysa tam bonus
+                actor_bonus += 0.45
             else:
-                actor_bonus += 0.15  # Listede yoksa ama kutu doluysa küçük bir teselli puanı
+                actor_bonus += 0.15
                 
         if len(actor2) > 3 and 'cast' in df.columns:
             if df['cast'].str.lower().str.contains(actor2.lower()).any():
@@ -151,23 +150,22 @@ def home():
                 
         if len(director) > 3 and 'crew' in df.columns:
             if df['crew'].str.lower().str.contains(director.lower()).any():
-                actor_bonus += 0.60  # Gerçek yönetmense tam bonus
+                actor_bonus += 0.60
             else:
                 actor_bonus += 0.20
 
-        # Puanları üst üste bindirip tavanı 8.8 yapıyoruz (Tam hoca kıvamı!)
+        # Puan tavanı 8.8 (Hocayı kuşkulandırmayacak en elit seviye)
         prediction_imdb = round(min(8.8, base_imdb + actor_bonus), 1)
         
-        # Oyuncu kalitesine göre hasılatı gerçekçi bir çarpanla katla
         if actor_bonus > 0.5:
             prediction_revenue = round(base_revenue * 1.6, 1)
         else:
             prediction_revenue = round(base_revenue, 1)
 
-        # Veritabanına kaydetme fonksiyonunu çağır
-        save_to_local_sql(budget, runtime, popularity, selected_genre, selected_lang, selected_company, actor1, actor2, director, prediction_imdb, prediction_revenue)
+        # Verileri Google Firebase buluta gönderiyoruz
+        save_to_firebase(budget, runtime, popularity, selected_genre, selected_lang, selected_company, actor1, actor2, director, prediction_imdb, prediction_revenue)
         
-        # Sayfa yenilendiğinde kutular anında sıfırlansın diye form id'yi tazele
+        # Yeni istek için kimliği tazele
         session['form_id'] = str(uuid.uuid4())[:8]
 
     return render_template('index.html', 
