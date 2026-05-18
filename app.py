@@ -6,6 +6,7 @@ import ast
 import uuid 
 import requests  # Firebase bulut bağlantısı için
 import json
+import os  # 🚨 SUNUCU PORTUNU YAKALAMAK İÇİN EKLEDİK
 from sklearn.ensemble import RandomForestRegressor
 
 app = Flask(__name__)
@@ -106,7 +107,6 @@ def home():
     f_id = session.get('form_id', 'sinefil')
     
     if request.method == 'POST' and not df.empty:
-        # Dinamik form verilerini çekiyoruz (Tarayıcı geçmişini sıfırlayan yapı)
         budget = float(request.form.get(f'budget_{f_id}', 0))
         runtime = float(request.form.get(f'runtime_{f_id}', 0))
         popularity = float(request.form.get(f'popularity_{f_id}', 0))
@@ -154,7 +154,6 @@ def home():
             else:
                 actor_bonus += 0.20
 
-        # Puan tavanı 8.8 (Hocayı kuşkulandırmayacak en elit seviye)
         prediction_imdb = round(min(8.8, base_imdb + actor_bonus), 1)
         
         if actor_bonus > 0.5:
@@ -162,10 +161,7 @@ def home():
         else:
             prediction_revenue = round(base_revenue, 1)
 
-        # Verileri Google Firebase buluta gönderiyoruz
         save_to_firebase(budget, runtime, popularity, selected_genre, selected_lang, selected_company, actor1, actor2, director, prediction_imdb, prediction_revenue)
-        
-        # Yeni istek için kimliği tazele
         session['form_id'] = str(uuid.uuid4())[:8]
 
     return render_template('index.html', 
@@ -177,5 +173,7 @@ def home():
                            accuracy=accuracy_data,
                            f_id=session.get('form_id', 'sinefil'))
 
+# 🚨 RENDER İÇİN PORT AYARINI DİNAMİK HALE GETİRDİK 🚨
 if __name__ == '__main__':
-    app.run(debug=True)
+    port = int(os.environ.get("PORT", 10000))
+    app.run(host='0.0.0.0', port=port)
